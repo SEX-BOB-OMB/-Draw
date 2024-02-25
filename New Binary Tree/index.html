@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <form id="input">
+            <div>
+                <label>Тип дерева:
+                    <select name="type">
+                        <option value="bst">Бинарное дерево поиска</option>
+                        <option value="avl">АВЛ-дерево</option>
+                    </select>
+                </label>
+            </div>
+            <div>
+                <label> Введите ключи дерева:
+                    <input type="text" name="keys" maxlength="50">
+                </label>
+            </div>
+            <div>
+                <label>Операция:
+                    <select name="operation">
+                        <option value="bfs">Обход в ширину</option>
+                        <option value="dfs">Обход в глубину</option>
+                        <option value="add">Добавить узел</option>
+                        <option value="del">Удалить узел</option>
+                    </select>
+                </label>
+            </div>
+            <input type="submit">
+        </form>
+     
+        <div id="tree"></div>
+        <div id="operationBlock">
+        </div>
+    </body>
+    <footer>
+        <script src="BinarySearchTree.js"></script>
+        <script src="Subfunctions.js"></script>
+        <script src="Operation.js"></script>
+        <script src="Taskfunctions.js"></script>
+        <script src="main.js"></script>
+    </footer>
+</html>
