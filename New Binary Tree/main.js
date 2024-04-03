@@ -1,4 +1,3 @@
-const treeDiv = document.getElementById("tree");
 
 // let opBFS = new Operation(
 //     "Выполните обход в ширину",

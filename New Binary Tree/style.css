@@ -4,20 +4,26 @@ div {
 
 .flex {
     display: flex;
-    flex-flow: row wrap;
+    flex-flow: nowrap;
     align-content: center;
     justify-content: center;
 }
 
 .node {
-    display: inline-block;
-    border: 1px solid black;
-    width: 40px;
-    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid black;
     text-align: center;
-    line-height: 40px;
     margin: 0px 0px;
     border-radius: 100%;
+    font-size: small;
+    font-weight: bold;
+}
+
+.size {
+    width: 2vw;
+    height: 2vw;
 }
 
 .selected {

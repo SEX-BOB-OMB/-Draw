@@ -1,5 +1,6 @@
 const MAX_INT = 100;
 
+const treeDiv = document.getElementById("tree");
 const formElement = document.getElementById('input');
 const operationBlock = document.getElementById("operationBlock");
 let treeNodes;
@@ -7,6 +8,7 @@ let treeNodes;
 let formData;
 let executableOperation;
 let tree;
+let direction;
 
 formElement.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -36,7 +38,12 @@ const compareArrays = (a, b) =>
   a.length === b.length && a.every((element, index) => element == b[index]);
 
 function checkResults(userResult, subOperationResult, i) {
-    if (compareArrays(userResult, subOperationResult)) {
+    let _userResult = userResult
+    if (typeof userResult === 'string') {
+        _userResult = [document.querySelector(userResult).value]
+    }
+    console.log(_userResult, subOperationResult)
+    if (compareArrays(_userResult, subOperationResult)) {
         alert('Все верно!');
         suboperationDiv = document.getElementById('suboperationBlock')
         suboperationDiv.innerHTML = drawSuboperationBlock(executableOperation.subOperations, i + 1)
@@ -69,22 +76,58 @@ function drawSuboperationBlock(suboperationList, i) {
             executableOperation = initializationList[1];
         }
 
+        // tree = getTree(treeType, executableOperation.outputData.keys)
+        treeDiv.innerHTML = tree.treePrinter();
         operationBlock.innerHTML = drawOperationBlock(executableOperation);
         treeDiv.innerHTML = tree.treePrinter();
     } else {
         suboperation = suboperationList[i];
-        
-        if (formData.get('operation') === 'add' && i === 1) {
-            result = confirm("Добавить в левое поддерево?");
-            suboperationDiv = document.getElementById('suboperationBlock')
-            
-            if (suboperation.outputData.keys == result) {
-                alert('Все верно!')
-                suboperationDiv.innerHTML = drawSuboperationBlock(executableOperation.subOperations, 2)
-            } else {
-                alert('Ошибка')
-                suboperationDiv.innerHTML = drawSuboperationBlock(executableOperation.subOperations, 1)
-            }
+  
+        if (formData.get('operation') === 'add' && i == 1) {
+            addDirection = `['${suboperation.outputData.keys}']`
+            suboperationText = `${i + 1}. ${suboperation.text}
+                <div id="selectedNodes"></div>
+                <label>
+                    Слева
+                    <input type='radio' name='direction' value='left' checked />
+                </label>
+                <label>
+                    Справа
+                    <input type='radio' name='direction' value='right' />
+                </label>
+                <input type="button" value="Проверить" onclick="checkResults('input[name=direction]:checked', ${addDirection}, ${i})">
+            `;
+            return suboperationText;
+        } else if ((formData.get('operation') === 'add' || formData.get('operation') === 'del') && i % 2 == 1 && i > 2 ) {
+            rotateDirection = `['${suboperation.outputData.keys}']`
+            suboperationText = `${i + 1}. ${suboperation.text}
+                <div id="selectedNodes"></div>
+                <label>
+                    Левый
+                    <input type='radio' name='direction' value='left' checked />
+                </label>
+                <label>
+                    Правый
+                    <input type='radio' name='direction' value='right' />
+                </label>
+                <label>
+                    Левый-правый
+                    <input type='radio' name='direction' value='left-right' />
+                </label>
+                <label>
+                    Правый-левый
+                    <input type='radio' name='direction' value='right-left' />
+                </label>
+                <input type="button" value="Проверить" onclick="checkResults('input[name=direction]:checked', ${rotateDirection}, ${i})">
+            `;
+            return suboperationText;
+        }
+
+
+        if (suboperation.inputData.isTree) {
+            selectedNodes = [];
+            tree = getTree('bst', suboperation.inputData.keys)
+            treeDiv.innerHTML = tree.treePrinter();
         }
         
         keysStr = `[${suboperation.outputData.keys.toString()}]`
@@ -104,6 +147,7 @@ function getTree(selectedType, keys) {
             tree = new BinarySearchTree();
             break;
         case 'avl':
+            tree = new AVLTree();
             break;
     }
 
@@ -111,6 +155,7 @@ function getTree(selectedType, keys) {
         keysValues = keys.split(" ").map(x => parseInt(x))
     else
         keysValues = keys
+    
     for (i in keysValues) {
         tree.insert(keysValues[i]);
     }
@@ -127,69 +172,12 @@ function initialize(treeType, keys, operationType) {
 function getOperation(selectedOperation, tree) {
     switch (selectedOperation) {
         case 'bfs':
-            treeKeys = tree.preorderTraversal(tree.root);
-            return new Operation(
-                "Выполните обход в ширину",
-                [
-                    new SubOperation("Тык-тык по узлам", new inputData(treeKeys), new outputData(tree.bfs())),
-                ],
-                new inputData(treeKeys, true),
-                new outputData(tree.bfs(), false)
-            );
+            return new OperationBFS(tree);
         case 'dfs':
-            treeKeys = tree.preorderTraversal(tree.root);
-            return new Operation(
-                "Выполните обход в глубину",
-                [
-                    new SubOperation("Тык-тык по узлам", new inputData(treeKeys), new outputData(treeKeys)),
-                ],
-                new inputData(treeKeys, true),
-                new outputData(treeKeys, false)
-            );
+            return new OperationDFS(tree);
         case 'del':
-            treeKeys = tree.preorderTraversal(tree.root);
-            
-            delValue = treeKeys[Math.floor(Math.random() * treeKeys.length)];
-            delNode = tree.search(delValue);
-            
-            resTree = getTree(formData.get("type"), treeKeys);
-            resTree.remove(delValue);
-
-            сhangeNode = findChangeNode(delNode);
-            
-            if (!сhangeNode)
-                сhangeNode = ""
-            else
-                сhangeNode = сhangeNode.data
-
-            return new Operation(
-                `Удалить узел ${delValue}`,
-                [
-                    new SubOperation("Найдите удаляемый узел", new inputData(treeKeys), new outputData(delValue)),
-                    new SubOperation("Найдите замену узла, если это необходимо", new inputData(treeKeys), new outputData(сhangeNode))
-                ],
-                new inputData(treeKeys, true),
-                new outputData(resTree.preorderTraversal(resTree.root), true)
-            )
+            return new OperationDel(tree);
         case 'add':
-            treeKeys = tree.preorderTraversal(tree.root);
-
-            addValue = Math.floor(Math.random() * MAX_INT);
-            addNode = findPlaceToAdd(tree.root, addValue);
-
-            isLeft = (addNode.data > addValue) ? true : false;
-            
-            resTree = getTree(formData.get("type"), treeKeys);
-            resTree.insert(addValue);
-
-            return new Operation(
-                `Добавить узел ${addValue}`,
-                [
-                    new SubOperation("Найдите место вставки", new inputData(treeKeys), new outputData(addNode.data)),
-                    new SubOperation("Вставить в левое или в правое поддерево", new inputData(treeKeys), new outputData(isLeft))
-                ],
-                new inputData(treeKeys, true),
-                new outputData(resTree.preorderTraversal(resTree.root), true)
-            )
+            return new OperationAdd(tree);
     }
 }
